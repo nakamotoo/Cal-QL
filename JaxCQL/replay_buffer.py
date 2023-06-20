@@ -106,11 +106,16 @@ class ReplayBuffer(object):
 
 # based on https://github.com/Farama-Foundation/D4RL/blob/master/d4rl/__init__.py
 def get_d4rl_dataset_with_mc_calculation(env, reward_scale, reward_bias, clip_action, gamma):
+    is_sparse_reward = False
+    infinite_horizon = False
     if "antmaze" in env:
         is_sparse_reward=True
+    elif "kitchen" in env:
+        is_sparse_reward=False
+        infinite_horizon = True
     else:
         raise NotImplementedError
-    dataset = qlearning_dataset_and_calc_mc(gym.make(env).unwrapped, reward_scale, reward_bias, clip_action, gamma, is_sparse_reward=is_sparse_reward)
+    dataset = qlearning_dataset_and_calc_mc(gym.make(env).unwrapped, reward_scale, reward_bias, clip_action, gamma, is_sparse_reward=is_sparse_reward, infinite_horizon=infinite_horizon)
 
     return dict(
         observations=dataset['observations'],
@@ -215,13 +220,12 @@ def get_hand_dataset_with_mc_calculation(env_name, gamma, add_expert_demos=True,
         concatenated[key] = np.concatenate([batch[key] for batch in dataset], axis=0).astype(np.float32)
     return concatenated
 
-def qlearning_dataset_and_calc_mc(env, reward_scale, reward_bias, clip_action, gamma, dataset=None, terminate_on_end=False, is_sparse_reward=True, **kwargs):
+def qlearning_dataset_and_calc_mc(env, reward_scale, reward_bias, clip_action, gamma, dataset=None, terminate_on_end=False, is_sparse_reward=True, infinite_horizon=False, **kwargs):
 
     dataset = env.get_dataset(**kwargs)
     N = dataset['rewards'].shape[0]
     data_ = collections.defaultdict(list)
     episodes_dict_list = []
-
     # The newer version of the dataset adds an explicit
     # timeouts field. Keep old method for backwards compatability.
     use_timeouts = False
@@ -254,14 +258,14 @@ def qlearning_dataset_and_calc_mc(env, reward_scale, reward_bias, clip_action, g
                 episode_data[k] = np.array(data_[k])
 
             episode_data["rewards"] = episode_data["rewards"] * reward_scale + reward_bias
-            episode_data["mc_returns"] = calc_return_to_go(env.spec.name, episode_data["rewards"], episode_data["terminals"], gamma, reward_scale, reward_bias, is_sparse_reward)
+            episode_data["mc_returns"] = calc_return_to_go(env.spec.name, episode_data["rewards"], episode_data["terminals"], gamma, reward_scale, reward_bias, is_sparse_reward, infinite_horizon)
             episode_data['actions'] = np.clip(episode_data['actions'], -clip_action, clip_action)
             episodes_dict_list.append(episode_data)
             data_ = collections.defaultdict(list)
     return concatenate_batches(episodes_dict_list)
 
 
-def calc_return_to_go(env_name, rewards, terminals, gamma, reward_scale, reward_bias, is_sparse_reward):
+def calc_return_to_go(env_name, rewards, terminals, gamma, reward_scale, reward_bias, is_sparse_reward, infinite_horizon):
     """
     A config dict for getting the default high/low rewrd values for each envs
     This is used in calc_return_to_go func in sampler.py and replay_buffer.py
@@ -288,7 +292,7 @@ def calc_return_to_go(env_name, rewards, terminals, gamma, reward_scale, reward_
         return_to_go = [float(reward_neg / (1-gamma))] * len(rewards)
     else:
         return_to_go = [0] * len(rewards)
-        prev_return = 0
+        prev_return = 0 if not infinite_horizon else float(rewards[-1]/(1-gamma))
         for i in range(len(rewards)):
             return_to_go[-i-1] = rewards[-i-1] + gamma * prev_return * (1 - terminals[-i-1])
             prev_return = return_to_go[-i-1]

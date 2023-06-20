@@ -53,6 +53,8 @@ class TrajSampler(object):
                     mc_returns = calc_return_to_go(self.env.spec.name, rewards, dones, self.gamma, self.reward_scale, self.reward_bias, is_sparse_reward=True)
                 elif self.env.spec.name in  ["pen-binary-v0", "door-binary-v0", "relocate-binary-v0", "pen-binary", "door-binary", "relocate-binary"]:
                     mc_returns = calc_return_to_go(self.env.spec.name, rewards, dones, self.gamma, self.reward_scale, self.reward_bias, is_sparse_reward=True)
+                elif "kitchen" in self.env.spec.name:
+                    mc_returns = calc_return_to_go(self.env.spec.name, rewards, dones, self.gamma, self.reward_scale, self.reward_bias, is_sparse_reward=False, infinite_horizon=True)
                 else:
                     # mc_returns = calc_return_to_go(self.env.spec.name, rewards_unscaled, dones, self.gamma, self.reward_scale, self.reward_bias, is_sparse_reward=False)
                     """

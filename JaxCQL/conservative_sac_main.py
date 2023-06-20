@@ -165,6 +165,10 @@ def main(argv):
                     # for d4rl envs
                     metrics['evaluation/average_normalized_return'] = np.mean([eval_sampler.env.get_normalized_score(np.sum(t['rewards'])) for t in trajs])
 
+                if 'kitchen' in FLAGS.env:
+                    metrics['evaluation/num_stages_solved'] = np.mean([t['rewards'][-1] for t in trajs])
+                    metrics['evaluation/num_stages_solved_normalized'] = np.mean([t['rewards'][-1] for t in trajs]) / 4 
+
                 if is_online:
                     online_eval_counter = replay_buffer.total_steps // FLAGS.online_eval_every_n_env_steps
 
