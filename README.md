@@ -60,7 +60,7 @@ Please check [scripts/run_antmaze.sh](scripts/run_antmaze.sh) for the details.
 All available command options can be seen in conservative\_sac_main.py and conservative_sac.py.
 
 ### Adroit Binary
-1. Download the offline dataset from [here](https://drive.google.com/file/d/1SsVaQKZnY5UkuR78WrInp9XxTdKHbF0x/view) and unzip the files into `<this repositroy>/demonstrations/offpolicy_hand_data/*.npy` 
+1. Download the offline dataset from [here](https://drive.google.com/file/d/1yUdJnGgYit94X_AvV6JJP5Y3Lx2JF30Y/view) and unzip the files into `<this repositroy>/demonstrations/offpolicy_hand_data/*.npy` 
 2. We should also install `mj_envs` from [this fork](https://github.com/nakamotoo/mj_envs)
 ```
 $ git clone --recursive https://github.com/nakamotoo/mj_envs.git
